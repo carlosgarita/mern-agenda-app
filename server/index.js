@@ -14,11 +14,15 @@ const authRoutes = require("./routes/authRoutes");
 
 const contactRoutes = require("./routes/contactRoutes");
 
+const frontendURL =
+  "https://mern-agenda-app-vercel-k7ztzudhe-carlosgs-projects-0e7da516.vercel.app";
+
 // Middleware básicos
 app.use(express.json()); // Permite a Express leer JSON en el body de las peticiones
 app.use(
   cors({
-    origin: "*", // Permite todos los orígenes
+    origin: frontendURL, // Solo permite peticiones desde este dominio
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"], // Permite estos métodos
     allowedHeaders: ["Content-Type", "Authorization"], // Permite estos encabezados
   })
