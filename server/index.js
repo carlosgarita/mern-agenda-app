@@ -1,75 +1,36 @@
 // server/index.js
 
-// Importar dotenv para cargar variables de entorno
-require("dotenv").config();
-
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
+// ...
 
-const app = express();
-const PORT = process.env.PORT || 5001;
-
-const authRoutes = require("./routes/authRoutes");
-
-const contactRoutes = require("./routes/contactRoutes");
-
-const frontendURL =
-  "https://mern-agenda-app-vercel-k7ztzudhe-carlosgs-projects-0e7da516.vercel.app";
-
-// Definir los orígenes permitidos
+// Definir los orígenes permitidos en un array
+// 1. Siempre se permite el origen local (http://localhost:3000)
+// 2. Se permite el origen de producción (leído de la variable de Render)
 const allowedOrigins = [
-  "http://localhost:3000", // <-- ¡AÑADE ESTE ORIGEN LOCAL!
-  process.env.FRONTEND_URL || frontendURL, // <-- Dominio de Vercel
-];
+  "http://localhost:3000",
+  // Aseguramos que solo se añada si la variable existe en Render
+  process.env.FRONTEND_URL,
+].filter(Boolean); // .filter(Boolean) elimina entradas nulas o vacías
 
-// Middleware básicos
-app.use(express.json()); // Permite a Express leer JSON en el body de las peticiones
+// Configuración de CORS
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Permitir peticiones sin origen (como Postman o CURL)
-      // O si el origen está en nuestra lista de permitidos
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Permitir peticiones sin origen (ej: Postman, CURL, o el mismo servidor)
+      if (!origin) return callback(null, true);
+
+      // Si el origen está en nuestra lista (localhost o Vercel), permitir
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("No permitido por CORS"));
+        // Rechazar si no está en la lista (este es el error que estás viendo)
+        callback(new Error("No permitido por CORS. Origen: " + origin));
       }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"], // Permite estos métodos
-    allowedHeaders: ["Content-Type", "Authorization"], // Permite estos encabezados
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-app.use("/api/auth", authRoutes); // 2. Usar
-
-// Middleware de registro simple para ver cada solicitud recibida
-app.use((req, res, next) => {
-  console.log(`[REQUEST] Método: ${req.method} - URL: ${req.url}`);
-  next(); // Continúa al siguiente middleware o ruta
-});
-
-// --- Conexión a la Base de Datos ---
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Conectado a MongoDB Atlas."))
-  .catch((err) => console.error("Error al conectar a MongoDB:", err));
-
-// --- Rutas ---
-// La ruta principal para verificar que el servidor funciona
-app.get("/", (req, res) => {
-  res.send("API de Agenda en funcionamiento.");
-});
-
-// Rutas de autenticación (Públicas)
-app.use("/api/auth", authRoutes);
-
-// Rutas de contactos (Protegidas)
-app.use("/api/contacts", contactRoutes);
-
-// Iniciar Servidor
-app.listen(PORT, () => {
-  console.log(`Servidor Express en funcionamiento en el puerto ${PORT}`);
-  console.log(`Acceda a: http://localhost:${PORT}`);
-});
+// ...
