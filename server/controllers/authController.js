@@ -34,6 +34,7 @@ exports.registerUser = async (req, res) => {
       msg: "Usuario registrado exitosamente",
       token, // Enviamos el token al cliente
       userId: user._id,
+      username: user.username,
     });
   } catch (err) {
     console.error(err.message);
@@ -67,6 +68,7 @@ exports.loginUser = async (req, res) => {
       msg: "Inicio de sesión exitoso",
       token,
       userId: user._id,
+      username: user.username,
     });
   } catch (err) {
     console.error(err.message);

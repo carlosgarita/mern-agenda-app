@@ -17,11 +17,25 @@ const contactRoutes = require("./routes/contactRoutes");
 const frontendURL =
   "https://mern-agenda-app-vercel-k7ztzudhe-carlosgs-projects-0e7da516.vercel.app";
 
+// Definir los orígenes permitidos
+const allowedOrigins = [
+  "http://localhost:3000", // <-- ¡AÑADE ESTE ORIGEN LOCAL!
+  process.env.FRONTEND_URL || frontendURL, // <-- Dominio de Vercel
+];
+
 // Middleware básicos
 app.use(express.json()); // Permite a Express leer JSON en el body de las peticiones
 app.use(
   cors({
-    origin: frontendURL, // Solo permite peticiones desde este dominio
+    origin: function (origin, callback) {
+      // Permitir peticiones sin origen (como Postman o CURL)
+      // O si el origen está en nuestra lista de permitidos
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("No permitido por CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"], // Permite estos métodos
     allowedHeaders: ["Content-Type", "Authorization"], // Permite estos encabezados

@@ -4,39 +4,44 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import authService from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
-// 1. Creación del Contexto
 const AuthContext = createContext(null);
-
-// Hook personalizado para usar el contexto fácilmente
 export const useAuth = () => useContext(AuthContext);
 
-// 2. Creación del Componente Provider
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Almacena el ID del usuario o datos
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Estado de sesión
+  // Ahora 'user' almacenará el nombre de usuario (string)
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
-  // Al cargar, verificar si hay un token en localStorage
+  // Al cargar, verificar si hay un token y el NOMBRE DE USUARIO
   useEffect(() => {
     const token = authService.getCurrentUser();
-    const userId = localStorage.getItem("userId");
+    // ⚠️ CAMBIO 1: Leer el nombre de usuario ('username')
+    const username = localStorage.getItem("username");
 
-    if (token && userId) {
-      // Idealmente, se debe validar el token contra el servidor.
-      // Por ahora, asumimos que si el token existe, el usuario está logueado.
+    if (token && username) {
       setIsAuthenticated(true);
-      setUser(userId);
+      // ⚠️ CAMBIO 2: Guardar el nombre de usuario en el estado
+      setUser(username);
     }
-  }, []); // Se ejecuta solo al montar el componente
+  }, []);
 
   // Función de LOGIN
   const login = async (username, password) => {
+    // Asegúrate de que tu authService.login() devuelve { token, userId, username }
     const data = await authService.login(username, password);
 
     if (data.token) {
+      // ⚠️ CAMBIO 3: Guardar el nombre de usuario en localStorage
+      localStorage.setItem("username", data.username);
+
+      // Mantenemos el userId por si lo usas en otros sitios
+      localStorage.setItem("userId", data.userId);
+
       setIsAuthenticated(true);
-      setUser(data.userId);
-      navigate("/agenda"); // Redirigir a la página de contactos después del login
+      // ⚠️ CAMBIO 4: Guardar el nombre de usuario en el estado del contexto
+      setUser(data.username);
+      navigate("/agenda");
     }
     return data;
   };
@@ -44,15 +49,19 @@ export const AuthProvider = ({ children }) => {
   // Función de LOGOUT
   const logout = () => {
     authService.logout();
+    // ⚠️ CAMBIO 5: Limpiar la nueva clave 'username'
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId"); // Limpia el ID también
+
     setIsAuthenticated(false);
     setUser(null);
-    navigate("/login"); // Redirigir a la página de login
+    navigate("/login");
   };
 
   // El valor que se comparte con todos los componentes
   const value = {
     isAuthenticated,
-    user,
+    user, // user ahora contiene el nombre de usuario
     login,
     logout,
   };
