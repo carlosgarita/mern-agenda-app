@@ -23,20 +23,13 @@ const allowedOrigins = [
 
 // Middleware básicos
 app.use(express.json());
+
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Permitir peticiones sin origen (ej: Postman, CURL, o el mismo servidor)
-      if (!origin) return callback(null, true);
+    // Usa el OR de JavaScript para decirle al servidor que use el dominio de Render,
+    // pero que caiga en localhost:3000 si la variable no existe (sólo para desarrollo)
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
 
-      // Si el origen está en nuestra lista, permitir
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        // Rechazar
-        callback(new Error("No permitido por CORS. Origen: " + origin));
-      }
-    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
